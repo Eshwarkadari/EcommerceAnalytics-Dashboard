@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ECommerce Analytics Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: 'Segoe UI', sans-serif; background:#0f172a; color:#e2e8f0; }
+
+  /* Navbar */
+  nav { background:#1e293b; padding:16px 32px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #334155; }
+  .logo { font-size:20px; font-weight:700; color:#38bdf8; }
+  .logo span { color:#f472b6; }
+  .nav-right { font-size:13px; color:#94a3b8; }
+
+  /* Main */
+  .main { padding:28px 32px; max-width:1400px; margin:0 auto; }
+  h2 { font-size:22px; font-weight:700; margin-bottom:20px; color:#f1f5f9; }
+
+  /* KPI Cards */
+  .kpis { display:grid; grid-template-columns:repeat(5,1fr); gap:16px; margin-bottom:28px; }
+  .kpi { background:#1e293b; border-radius:12px; padding:20px; border:1px solid #334155; }
+  .kpi .label { font-size:12px; color:#94a3b8; text-transform:uppercase; letter-spacing:.5px; }
+  .kpi .value { font-size:26px; font-weight:700; margin:6px 0 4px; color:#f1f5f9; }
+  .kpi .sub   { font-size:12px; color:#4ade80; }
+
+  /* Charts row */
+  .charts-row { display:grid; grid-template-columns:2fr 1fr; gap:16px; margin-bottom:20px; }
+  .charts-row2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px; }
+  .card { background:#1e293b; border-radius:12px; padding:22px; border:1px solid #334155; }
+  .card h3 { font-size:14px; color:#94a3b8; margin-bottom:16px; font-weight:600; text-transform:uppercase; letter-spacing:.5px; }
+  canvas { max-height:240px; }
+
+  /* Table */
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th { color:#64748b; font-weight:600; padding:10px 12px; text-align:left; border-bottom:1px solid #334155; }
+  td { padding:10px 12px; border-bottom:1px solid #1e293b; }
+  tr:hover td { background:#263348; }
+  .badge { padding:3px 8px; border-radius:20px; font-size:11px; font-weight:600; }
+  .badge-elec { background:#1d4ed8; color:#bfdbfe; }
+  .badge-cloth { background:#7c3aed; color:#ddd6fe; }
+  .badge-home { background:#065f46; color:#6ee7b7; }
+  .badge-book { background:#92400e; color:#fde68a; }
+  .badge-beauty { background:#9d174d; color:#fbcfe8; }
+
+  /* Footer */
+  footer { text-align:center; padding:20px; color:#475569; font-size:13px; border-top:1px solid #1e293b; margin-top:10px; }
+  footer a { color:#38bdf8; text-decoration:none; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">🛒 Ecommerce<span>Analytics</span></div>
+  <div class="nav-right">Built by Kadari Eshwar &nbsp;|&nbsp; B.Tech ECE, JNTU Hyderabad</div>
+</nav>
+
+<div class="main">
+  <h2>📊 Sales Dashboard</h2>
+
+  <!-- KPI Cards -->
+  <div class="kpis">
+    <div class="kpi">
+      <div class="label">Total Revenue</div>
+      <div class="value" id="kpi-revenue">—</div>
+      <div class="sub">↑ All time</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Total Profit</div>
+      <div class="value" id="kpi-profit">—</div>
+      <div class="sub" id="kpi-margin">— margin</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Total Orders</div>
+      <div class="value" id="kpi-orders">—</div>
+      <div class="sub">↑ Growing</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Avg Order Value</div>
+      <div class="value" id="kpi-avg">—</div>
+      <div class="sub">Per order</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Regions</div>
+      <div class="value">4</div>
+      <div class="sub">N · S · E · W</div>
+    </div>
+  </div>
+
+  <!-- Charts Row 1 -->
+  <div class="charts-row">
+    <div class="card">
+      <h3>📈 Monthly Revenue & Profit</h3>
+      <canvas id="monthlyChart"></canvas>
+    </div>
+    <div class="card">
+      <h3>🍩 Sales by Category</h3>
+      <canvas id="categoryChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Charts Row 2 -->
+  <div class="charts-row2">
+    <div class="card">
+      <h3>🏆 Top Products by Revenue</h3>
+      <canvas id="productsChart"></canvas>
+    </div>
+    <div class="card">
+      <h3>🗺️ Revenue by Region</h3>
+      <canvas id="regionChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Recent Orders Table -->
+  <div class="card">
+    <h3>🧾 Recent Orders</h3>
+    <table>
+      <thead>
+        <tr><th>Date</th><th>Customer</th><th>Product</th><th>Category</th><th>City</th><th>Revenue</th></tr>
+      </thead>
+      <tbody id="orders-table"></tbody>
+    </table>
+  </div>
+</div>
+
+<footer>
+  Built by <a href="https://github.com/Eshwarkadari" target="_blank">Kadari Eshwar</a>
+  &nbsp;|&nbsp; B.Tech ECE, JNTU Hyderabad &nbsp;|&nbsp;
+  <a href="https://github.com/Eshwarkadari/EcommerceAnalytics-Dashboard" target="_blank">GitHub Repo</a>
+</footer>
+
+<script>
+const COLORS = ['#38bdf8','#f472b6','#4ade80','#fb923c','#a78bfa','#34d399'];
+const fmt = n => '₹' + Number(n).toLocaleString('en-IN');
+
+// KPIs
+fetch('/api/kpis').then(r=>r.json()).then(d=>{
+  document.getElementById('kpi-revenue').textContent = fmt(d.total_revenue);
+  document.getElementById('kpi-profit').textContent  = fmt(d.total_profit);
+  document.getElementById('kpi-orders').textContent  = d.total_orders;
+  document.getElementById('kpi-avg').textContent     = fmt(d.avg_order);
+  document.getElementById('kpi-margin').textContent  = d.profit_margin + '% margin';
+});
+
+// Monthly Revenue Chart
+fetch('/api/monthly-revenue').then(r=>r.json()).then(data=>{
+  new Chart(document.getElementById('monthlyChart'),{
+    type:'bar',
+    data:{
+      labels: data.map(d=>d.month),
+      datasets:[
+        {label:'Revenue',data:data.map(d=>d.revenue),backgroundColor:'#38bdf8',borderRadius:4},
+        {label:'Profit', data:data.map(d=>d.profit), backgroundColor:'#4ade80',borderRadius:4}
+      ]
+    },
+    options:{responsive:true,plugins:{legend:{labels:{color:'#94a3b8'}}},
+      scales:{x:{ticks:{color:'#64748b'}},y:{ticks:{color:'#64748b',callback:v=>'₹'+v.toLocaleString()}}}}
+  });
+});
+
+// Category Donut Chart
+fetch('/api/category-sales').then(r=>r.json()).then(data=>{
+  new Chart(document.getElementById('categoryChart'),{
+    type:'doughnut',
+    data:{
+      labels: data.map(d=>d.category),
+      datasets:[{data:data.map(d=>d.revenue),backgroundColor:COLORS,borderWidth:0}]
+    },
+    options:{responsive:true,plugins:{legend:{position:'bottom',labels:{color:'#94a3b8',padding:12}}}}
+  });
+});
+
+// Top Products Bar
+fetch('/api/top-products').then(r=>r.json()).then(data=>{
+  new Chart(document.getElementById('productsChart'),{
+    type:'bar',
+    data:{
+      labels: data.map(d=>d.product),
+      datasets:[{label:'Revenue',data:data.map(d=>d.revenue),backgroundColor:'#a78bfa',borderRadius:4}]
+    },
+    options:{indexAxis:'y',responsive:true,
+      plugins:{legend:{display:false}},
+      scales:{x:{ticks:{color:'#64748b',callback:v=>'₹'+v.toLocaleString()}},y:{ticks:{color:'#94a3b8'}}}}
+  });
+});
+
+// Region Chart
+fetch('/api/region-sales').then(r=>r.json()).then(data=>{
+  new Chart(document.getElementById('regionChart'),{
+    type:'polarArea',
+    data:{
+      labels: data.map(d=>d.region),
+      datasets:[{data:data.map(d=>d.revenue),backgroundColor:COLORS.map(c=>c+'99'),borderWidth:0}]
+    },
+    options:{responsive:true,plugins:{legend:{position:'bottom',labels:{color:'#94a3b8'}}}}
+  });
+});
+
+// Recent Orders Table
+const badges = {Electronics:'elec',Clothing:'cloth',Home:'home',Books:'book',Beauty:'beauty'};
+fetch('/api/recent-orders').then(r=>r.json()).then(data=>{
+  const tbody = document.getElementById('orders-table');
+  tbody.innerHTML = data.map(o=>`
+    <tr>
+      <td>${o.order_date}</td>
+      <td>${o.customer}</td>
+      <td>${o.product}</td>
+      <td><span class="badge badge-${badges[o.category]||'elec'}">${o.category}</span></td>
+      <td>${o.city}</td>
+      <td style="color:#4ade80;font-weight:600">${fmt(o.revenue)}</td>
+    </tr>`).join('');
+});
+</script>
+</body>
+</html>
